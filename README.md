@@ -1,3 +1,5 @@
+Create app command `npx create-react-app reactivities-client-v2 --use-npm --template typescript`
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
