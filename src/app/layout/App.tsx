@@ -5,15 +5,20 @@ import { Activity } from '../models/activity';
 import NavBar from './NavBar';
 import ActivityDashboard from '../../features/activities/dashboard/ActivityDashboard';
 import { v4 as uuid } from 'uuid';
+import agent from '../api/agent';
+import Loading from './Loading';
 
 function App() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivitgy, setSelectedActivity] = useState<Activity | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    axios.get<Activity[]>('http://localhost:5000/api/activities').then(response => 
-      setActivities(response.data));
+    agent.Activities.list().then(response => {
+      setActivities(response.map(a => ({...a, date: a.date.split('T')[0]})));
+      setLoading(false);
+    });
   }, []);
 
   function handleSelectActivity(id: string) {
@@ -42,6 +47,8 @@ function App() {
   function handleDeleteActivity(id: string) {
     setActivities(activities.filter(a => a.id !== id));
   }
+
+  if (loading) return <Loading content="Loading app" />;
 
   return (
     <Fragment>
