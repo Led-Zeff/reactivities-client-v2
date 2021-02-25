@@ -19,7 +19,11 @@ const requests = {
 }
 
 const Activities = {
-  list: () => requests.get<Activity[]>('/activities')
+  list: () => requests.get<Activity[]>('/activities'),
+  detail: (id: string) => requests.get<Activity>(`/activities/${id}`),
+  create: (acitivity: Activity) => requests.post<void>('/activities', acitivity),
+  update: (acitivity: Activity) => requests.put<void>('/activities', acitivity),
+  delete: (id: string) => requests.delete<void>(`/activities/${id}`),
 }
 
 const agent = {

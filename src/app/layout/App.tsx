@@ -13,6 +13,7 @@ function App() {
   const [selectedActivitgy, setSelectedActivity] = useState<Activity | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     agent.Activities.list().then(response => {
@@ -38,14 +39,25 @@ function App() {
     setEditMode(false);
   }
 
-  function handleUpsertActivity(activity: Activity) {
-    setActivities(activity.id ? [...activities.filter(a => a.id !== activity.id), activity] : [...activities, {...activity, id: uuid()}]);
+  async function handleUpsertActivity(activity: Activity) {
+    setSubmitting(true);
+    if (activity.id) {
+      await agent.Activities.update(activity);
+      setActivities([...activities.filter(a => a.id !== activity.id), activity]);
+    } else {
+      await agent.Activities.create(activity);
+      setActivities([...activities, {...activity, id: uuid()}]);
+    }
+    setSubmitting(false);
     setEditMode(false);
     setSelectedActivity(activity);
   }
 
-  function handleDeleteActivity(id: string) {
+  async function handleDeleteActivity(id: string) {
+    setSubmitting(true);
+    await agent.Activities.delete(id);
     setActivities(activities.filter(a => a.id !== id));
+    setSubmitting(false);
   }
 
   if (loading) return <Loading content="Loading app" />;
@@ -64,6 +76,7 @@ function App() {
           closeForm={handleFormClose}
           upsert={handleUpsertActivity}
           deleteActivity={handleDeleteActivity}
+          submitting={submitting}
         />
       </Container>
     </Fragment>
