@@ -5,7 +5,7 @@ const sleep = (delay: number) => new Promise<void>((resolve) => setTimeout(() =>
 
 axios.defaults.baseURL = 'http://localhost:5000/api';
 axios.interceptors.response.use(async r => {
-  await sleep(1000);
+  await sleep(500);
   return r;
 })
 

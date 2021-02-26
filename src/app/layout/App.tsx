@@ -1,5 +1,4 @@
 import { Fragment, useEffect, useState } from 'react';
-import axios from 'axios';
 import { Container } from 'semantic-ui-react';
 import { Activity } from '../models/activity';
 import NavBar from './NavBar';
@@ -7,8 +6,12 @@ import ActivityDashboard from '../../features/activities/dashboard/ActivityDashb
 import { v4 as uuid } from 'uuid';
 import agent from '../api/agent';
 import Loading from './Loading';
+import { useStore } from '../stores/store';
+import { observer } from 'mobx-react-lite';
 
 function App() {
+  const {activityStore} = useStore();
+
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivitgy, setSelectedActivity] = useState<Activity | undefined>(undefined);
   const [editMode, setEditMode] = useState(false);
@@ -16,11 +19,8 @@ function App() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    agent.Activities.list().then(response => {
-      setActivities(response.map(a => ({...a, date: a.date.split('T')[0]})));
-      setLoading(false);
-    });
-  }, []);
+    activityStore.loadActivites();
+  }, [activityStore]);
 
   function handleSelectActivity(id: string) {
     setSelectedActivity(activities.find(a => a.id === id));
@@ -60,14 +60,14 @@ function App() {
     setSubmitting(false);
   }
 
-  if (loading) return <Loading content="Loading app" />;
+  if (activityStore.loadingIinitial) return <Loading content="Loading app" />;
 
   return (
     <Fragment>
       <NavBar openForm={handleFormOpen}/>
 
       <Container style={{marginTop: '7em'}}>
-        <ActivityDashboard activities={activities}
+        <ActivityDashboard activities={activityStore.activities}
           selectedActivity={selectedActivitgy}
           selectActivity={handleSelectActivity}
           cancelSelectActivity={handleCancelSelectActivity}
@@ -83,4 +83,4 @@ function App() {
   );
 }
 
-export default App;
+export default observer(App);
