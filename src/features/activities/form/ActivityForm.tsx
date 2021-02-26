@@ -1,16 +1,14 @@
+import { observer } from "mobx-react-lite";
 import React, { ChangeEvent, useState } from "react";
 import { Button, Form, Segment } from "semantic-ui-react";
 import { Activity } from "../../../app/models/activity";
+import { useStore } from "../../../app/stores/store";
 
-interface Props {
-  activity: Activity | undefined;
-  closeForm: () => void;
-  upsert: (activity: Activity) => void;
-  submitting: boolean;
-}
+export default observer(function ActivityForm() {
+  const {activityStore} = useStore();
+  const {selectedActivity, closeForm, createActivity, updateActivity, loading} = activityStore;
 
-export default function ActivityForm({activity: selecedActivity, closeForm, upsert, submitting}: Props) {
-  const initialState = selecedActivity ?? {
+  const initialState = selectedActivity ?? {
     id: '',
     title: '',
     category: '',
@@ -23,7 +21,7 @@ export default function ActivityForm({activity: selecedActivity, closeForm, upse
   const [activity, setActivity] = useState(initialState);
 
   function handleSubmit() {
-    upsert(activity);
+    activity.id ? updateActivity(activity) : createActivity(activity);
   }
 
   function handleInputChange(evet: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -40,9 +38,9 @@ export default function ActivityForm({activity: selecedActivity, closeForm, upse
         <Form.Input placeholder="Date" value={activity.date} name="date" onChange={handleInputChange} type="date" />
         <Form.Input placeholder="City" value={activity.city} name="city" onChange={handleInputChange} />
         <Form.Input placeholder="Venue" value={activity.venue} name="venue" onChange={handleInputChange} />
-        <Button loading={submitting} disabled={submitting} floated="right" positive type="submit" content="Submit" />
+        <Button loading={loading} disabled={loading} floated="right" positive type="submit" content="Submit" />
         <Button floated="right" type="submit" content="Cancel" onClick={closeForm} />
       </Form>
     </Segment>
   );
-}
+});
