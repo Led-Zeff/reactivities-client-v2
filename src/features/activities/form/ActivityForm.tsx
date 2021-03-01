@@ -1,14 +1,17 @@
 import { observer } from "mobx-react-lite";
-import React, { ChangeEvent, useState } from "react";
+import React, { ChangeEvent, useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { Button, Form, Segment } from "semantic-ui-react";
+import Loading from "../../../app/layout/Loading";
 import { Activity } from "../../../app/models/activity";
 import { useStore } from "../../../app/stores/store";
 
 export default observer(function ActivityForm() {
   const {activityStore} = useStore();
-  const {selectedActivity, closeForm, createActivity, updateActivity, loading} = activityStore;
+  const {createActivity, updateActivity, loading, loadActivity} = activityStore;
+  const {id} = useParams<{id: string}>();
 
-  const initialState = selectedActivity ?? {
+  const [activity, setActivity] = useState<Activity>({
     id: '',
     title: '',
     category: '',
@@ -16,9 +19,11 @@ export default observer(function ActivityForm() {
     date: '',
     city: '',
     venue: ''
-  };
+  });
 
-  const [activity, setActivity] = useState(initialState);
+  useEffect(() => {
+    if (id) loadActivity(id).then(a => setActivity(a!));
+  }, [id, loadActivity]);
 
   function handleSubmit() {
     activity.id ? updateActivity(activity) : createActivity(activity);
@@ -28,6 +33,8 @@ export default observer(function ActivityForm() {
     const {name, value} = evet.target;
     setActivity({...activity, [name]: value});
   }
+
+  if (loading) return <Loading />;
 
   return (
     <Segment clearing>
@@ -39,7 +46,7 @@ export default observer(function ActivityForm() {
         <Form.Input placeholder="City" value={activity.city} name="city" onChange={handleInputChange} />
         <Form.Input placeholder="Venue" value={activity.venue} name="venue" onChange={handleInputChange} />
         <Button loading={loading} disabled={loading} floated="right" positive type="submit" content="Submit" />
-        <Button floated="right" type="submit" content="Cancel" onClick={closeForm} />
+        <Button floated="right" type="submit" content="Cancel" />
       </Form>
     </Segment>
   );
