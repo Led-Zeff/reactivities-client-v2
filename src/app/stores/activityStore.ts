@@ -61,8 +61,10 @@ export default class ActivityStore {
       });
     } catch (e) {
       console.error(e);
+    } finally {
+      this.setLoading(false);
     }
-    this.setLoading(false);
+    return activity;
   };
 
   updateActivity = async (activity: Activity) => {
@@ -74,8 +76,10 @@ export default class ActivityStore {
       });
     } catch (error) {
       console.error(error);
+    } finally {
+      this.setLoading(false);
     }
-    this.setLoading(false);
+    return activity;
   };
 
   deleteActivity = async (id: string) => {

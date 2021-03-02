@@ -1,12 +1,13 @@
-import { observer } from "mobx-react-lite";
-import React, { ChangeEvent, useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { Button, Form, Segment } from "semantic-ui-react";
-import Loading from "../../../app/layout/Loading";
-import { Activity } from "../../../app/models/activity";
-import { useStore } from "../../../app/stores/store";
+import { observer } from 'mobx-react-lite';
+import React, { ChangeEvent, useEffect, useState } from 'react';
+import { Link, useHistory, useParams } from 'react-router-dom';
+import { Button, Form, Segment } from 'semantic-ui-react';
+import Loading from '../../../app/layout/Loading';
+import { Activity } from '../../../app/models/activity';
+import { useStore } from '../../../app/stores/store';
 
 export default observer(function ActivityForm() {
+  const history = useHistory();
   const {activityStore} = useStore();
   const {createActivity, updateActivity, loading, loadActivity} = activityStore;
   const {id} = useParams<{id: string}>();
@@ -25,8 +26,9 @@ export default observer(function ActivityForm() {
     if (id) loadActivity(id).then(a => setActivity(a!));
   }, [id, loadActivity]);
 
-  function handleSubmit() {
-    activity.id ? updateActivity(activity) : createActivity(activity);
+  async function handleSubmit() {
+    const saved = activity.id ? await updateActivity(activity) : await createActivity(activity);
+    history.push(`/activities/${saved.id}`);
   }
 
   function handleInputChange(evet: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
@@ -46,7 +48,7 @@ export default observer(function ActivityForm() {
         <Form.Input placeholder="City" value={activity.city} name="city" onChange={handleInputChange} />
         <Form.Input placeholder="Venue" value={activity.venue} name="venue" onChange={handleInputChange} />
         <Button loading={loading} disabled={loading} floated="right" positive type="submit" content="Submit" />
-        <Button floated="right" type="submit" content="Cancel" />
+        <Button floated="right" content="Cancel" as={Link} to='/activities' />
       </Form>
     </Segment>
   );
