@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useHistory, useParams } from 'react-router-dom';
 import { Button, Header, Segment } from 'semantic-ui-react';
 import Loading from '../../../app/layout/Loading';
-import { Activity } from '../../../app/models/activity';
+import { Activity, ActivityFormValues } from '../../../app/models/activity';
 import { useStore } from '../../../app/stores/store';
 import * as Yup from 'yup';
 import AppTextInput from '../../../app/common/form/AppTextInput';
@@ -19,15 +19,7 @@ export default observer(function ActivityForm() {
   const {createActivity, updateActivity, loading, loadActivity, selectedActivity} = activityStore;
   const {id} = useParams<{id: string}>();
 
-  const [activity, setActivity] = useState<Partial<Activity>>({
-    id: '',
-    title: '',
-    category: '',
-    description: '',
-    date: undefined,
-    city: '',
-    venue: ''
-  });
+  const [activity, setActivity] = useState<Partial<ActivityFormValues>>(new ActivityFormValues());
 
   const validationSchema = Yup.object({
     title: Yup.string().required('The title is required'),
@@ -40,11 +32,11 @@ export default observer(function ActivityForm() {
 
   useEffect(() => {
     if (id) loadActivity(id).then(() => {
-      if (selectedActivity) setActivity(selectedActivity);
+      if (selectedActivity) setActivity(new ActivityFormValues(selectedActivity));
     });
   }, [id, loadActivity, selectedActivity]);
 
-  async function handleFormSubmit(activity: Activity) {
+  async function handleFormSubmit(activity: ActivityFormValues) {
     const saved = activity.id ? await updateActivity(activity) : await createActivity(activity);
     history.push(`/activities/${saved.id}`);
   }
@@ -67,7 +59,7 @@ export default observer(function ActivityForm() {
             <AppTextInput placeholder="Venue" name="venue" />
 
             <Button floated="right" positive type="submit" content="Submit" 
-                    loading={loading} disabled={isSubmitting || !dirty || !isValid}/>
+                    loading={isSubmitting} disabled={isSubmitting || !dirty || !isValid}/>
             <Button floated="right" content="Cancel" as={Link} to='/activities' />
           </Form>
         )}

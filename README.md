@@ -1,3 +1,8 @@
+## Popup example
+In activity attendees [ActivityListItemAttendee.tsx](./src/features/activities/dashboard/ActivityListItemAttendee.tsx)
+
+
+
 Create app command `npx create-react-app reactivities-client-v2 --use-npm --template typescript`
 
 # Getting Started with Create React App
