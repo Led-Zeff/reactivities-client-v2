@@ -3,9 +3,12 @@ import agent from "../api/agent";
 import { Activity } from "../models/activity";
 import { v4 as uuid } from 'uuid';
 import { format } from "date-fns";
+import { store } from "./store";
+import { Profile } from "../models/profile";
 
 export default class ActivityStore {
   activityRegistry = new Map<string, Activity>();
+  selectedActivity: Activity | undefined = undefined;
   loading = false;
   loadingIinitial = true;
 
@@ -39,9 +42,11 @@ export default class ActivityStore {
     this.setLoadingInitial(false);
   }
 
-  loadActivity =  async (id: string) =>
-    this.activityRegistry.get(id)
+  loadActivity =  async (id: string) => {
+    const activity = this.activityRegistry.get(id)
       ?? await this.getActivity(id);
+    this.selectActivity(activity);
+  }
 
   private getActivity = async (id: string) => {
     this.setLoading(true);
@@ -57,15 +62,21 @@ export default class ActivityStore {
   };
 
   private addToRegistry = (activity: Activity) => {
+    const user = store.userStore.user;
+    if (user) {
+      activity.isGoing = activity.attendees?.some(a => a.username === user.username);
+      activity.isHost = activity.hostUsername === user.username;
+      activity.host = activity.attendees?.find(a => a.username === activity.hostUsername);
+    }
+
     this.activityRegistry.set(activity.id, { ...activity, date: new Date(activity.date) })
   }
   
   setLoadingInitial = (state: boolean) => this.loadingIinitial = state;
-
   setLoading = (state: boolean) => this.loading = state;
+  selectActivity = (activity?: Activity) => this.selectedActivity = activity;
 
   createActivity = async (activity: Activity) => {
-    this.setLoading(true);
     activity.id = uuid();
     try {
       await agent.Activities.create(activity);
@@ -74,8 +85,6 @@ export default class ActivityStore {
       });
     } catch (e) {
       console.error(e);
-    } finally {
-      this.setLoading(false);
     }
     return activity;
   };
@@ -106,5 +115,26 @@ export default class ActivityStore {
       console.log(error);
     }
     this.setLoading(false);
+  };
+
+  updateAttendance = async () => {
+    const user = store.userStore.user;
+    if (!this.selectedActivity || !user) return;
+
+    try {
+      await agent.Activities.attend(this.selectedActivity.id);
+      runInAction(() => {
+        if (this.selectedActivity?.isGoing) {
+          this.selectedActivity.attendees = this.selectedActivity.attendees?.filter(a => a.username !== user.username);
+          this.selectedActivity.isGoing = false;
+        } else {
+          this.selectedActivity?.attendees?.push(new Profile(user));
+          this.selectedActivity!.isGoing = true;
+        }
+        this.activityRegistry.set(this.selectedActivity!.id, this.selectedActivity!);
+      });
+    } catch (error) {
+      console.log(error);
+    }
   };
 }

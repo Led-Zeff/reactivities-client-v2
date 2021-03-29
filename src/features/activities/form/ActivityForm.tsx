@@ -16,7 +16,7 @@ import AppDateInput from '../../../app/common/form/AppDateInput';
 export default observer(function ActivityForm() {
   const history = useHistory();
   const {activityStore} = useStore();
-  const {createActivity, updateActivity, loading, loadActivity} = activityStore;
+  const {createActivity, updateActivity, loading, loadActivity, selectedActivity} = activityStore;
   const {id} = useParams<{id: string}>();
 
   const [activity, setActivity] = useState<Partial<Activity>>({
@@ -39,8 +39,10 @@ export default observer(function ActivityForm() {
   });
 
   useEffect(() => {
-    if (id) loadActivity(id).then(a => setActivity(a!));
-  }, [id, loadActivity]);
+    if (id) loadActivity(id).then(() => {
+      if (selectedActivity) setActivity(selectedActivity);
+    });
+  }, [id, loadActivity, selectedActivity]);
 
   async function handleFormSubmit(activity: Activity) {
     const saved = activity.id ? await updateActivity(activity) : await createActivity(activity);

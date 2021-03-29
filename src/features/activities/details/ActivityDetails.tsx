@@ -1,9 +1,8 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { Grid } from 'semantic-ui-react';
 import Loading from '../../../app/layout/Loading';
-import { Activity } from '../../../app/models/activity';
 import { useStore } from '../../../app/stores/store';
 import ActivityDetailedChat from './ActivityDetailedChats';
 import ActivityDetailedHader from './ActivityDetailedHeader';
@@ -12,12 +11,11 @@ import ActivityDetailedSidebar from './ActivityDetailedSidebar';
 
 export default observer(function ActivityDetails() {
   const {activityStore} = useStore();
-  const {loadActivity, loading} = activityStore;
+  const {loadActivity, loading, selectedActivity: activity} = activityStore;
   const {id} = useParams<{id: string}>();
-  const [activity, setActivity] = useState<Activity | undefined>();
 
   useEffect(() => {
-    if (id) loadActivity(id).then(a => setActivity(a));
+    if (id) loadActivity(id);
   }, [id, loadActivity]);
 
   if (loading || !activity) return <Loading />;
@@ -31,7 +29,7 @@ export default observer(function ActivityDetails() {
       </Grid.Column>
 
       <Grid.Column width={6}>
-        <ActivityDetailedSidebar />
+        <ActivityDetailedSidebar activity={activity} />
       </Grid.Column>
     </Grid>
   );

@@ -1,30 +1,42 @@
+import { observer } from "mobx-react-lite";
 import { Fragment } from "react";
 import { Link } from "react-router-dom";
 import { Image, Item, Label, List, Segment } from "semantic-ui-react";
+import { Activity } from "../../../app/models/activity";
 
-export default function ActivityDetailedSidebar() {
+interface Props {
+  activity: Activity;
+}
+
+export default observer(function ActivityDetailedSidebar({ activity: {attendees, host} }: Props) {
+  if (!attendees) return null;
+
   return (
     <Fragment>
       <Segment textAlign="center" style={{border: 'none'}} attached="top" secondary inverted color="teal">
-        3 people attending
+        {attendees.length} {attendees.length === 1 ? 'Person' : 'People'}
       </Segment>
 
       <Segment attached>
         <List relaxed divided>
-          <Item style={{position: 'relative'}}>
-            <Label style={{position: 'absolute'}} color="orange" ribbon="right" content="Host" />
-            <Image size="tiny" src="/assets/user-avatar.png" />
+          {attendees.map(attendee => (
+            <Item style={{position: 'relative'}} key={attendee.username}>
+              {attendee.username === host?.username && (
+                <Label style={{position: 'absolute'}} color="orange" ribbon="right" content="Host" />
+              )}
+              <Image size="tiny" src={attendee.image || '/assets/user-avatar.png'} />
 
-            <Item.Content verticalAlign="middle">
-              <Item.Header as="h3">
-                <Link to={'#'}>Bob</Link>
-              </Item.Header>
+              <Item.Content verticalAlign="middle">
+                <Item.Header as="h3">
+                  <Link to={`/profiles/${attendee.username}`}>{attendee.displayName}</Link>
+                </Item.Header>
 
-              <Item.Extra style={{color: 'orange'}}>Followings</Item.Extra>
-            </Item.Content>
-          </Item>
+                <Item.Extra style={{color: 'orange'}}>Following</Item.Extra>
+              </Item.Content>
+            </Item>
+          ))}
         </List>
       </Segment>
     </Fragment>
   );
-}
+});
