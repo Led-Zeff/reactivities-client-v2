@@ -13,7 +13,7 @@ export default observer(function ProfileCard({profile}: Props) {
       <Image src={profile.image || '/assets/user-avatar.png'} />
       <Card.Content>
         <Card.Header>{profile.displayName}</Card.Header>
-        <Card.Description>Bio goes here</Card.Description>
+        <Card.Description style={{textOverflow: 'ellipsis', whiteSpace: 'nowrap', overflow: 'hidden'}}>{profile.bio}</Card.Description>
       </Card.Content>
       
       <Card.Content extra>
