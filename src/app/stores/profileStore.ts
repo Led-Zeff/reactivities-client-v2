@@ -1,10 +1,11 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import agent from '../api/agent';
-import { Photo, Profile, ProfileFormValues } from '../models/profile';
+import { FollowPredicate, Photo, Profile, ProfileFormValues } from '../models/profile';
 import { store } from './store';
 
 export default class ProfileStore {
   profile: Profile | null = null;
+  followings: Profile[] = [];
 
   constructor() {
     makeAutoObservable(this);
@@ -82,6 +83,43 @@ export default class ProfileStore {
             this.profile.image = undefined;
           }
         }
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  updateFollowing = async (username: string, following: boolean) => {
+    try {
+      await agent.Profiles.updateFollowing(username);
+      store.activityStore.updateAttendeeFollowing(username);
+      runInAction(() => {
+        if (this.profile && this.profile.username !== store.userStore.user?.username && this.profile.username === username) {
+          following ? this.profile.followersCount++ : this.profile.followersCount--;
+          this.profile.following = !this.profile.following;
+        }
+
+        if (this.profile && this.profile.username === store.userStore.user?.username) {
+          following ? this.profile.followingCount++ : this.profile.followingCount--;
+        }
+
+        this.followings.forEach(following => {
+          if (following.username === username) {
+            following.following ? following.followersCount-- : following.followersCount++;
+            following.following = !following.following;
+          }
+        })
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  loadFollowings = async (predicate: FollowPredicate) => {
+    try {
+      const followings = await agent.Profiles.getFollowings(this.profile!.username, predicate);
+      runInAction(() => {
+        this.followings = followings;
       });
     } catch (error) {
       console.log(error);

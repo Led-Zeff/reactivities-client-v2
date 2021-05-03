@@ -2,7 +2,7 @@ import axios, { AxiosError, AxiosResponse } from 'axios';
 import { toast } from 'react-toastify';
 import { history } from '../..';
 import { Activity, ActivityFormValues } from '../models/activity';
-import { Photo, Profile, ProfileFormValues } from '../models/profile';
+import { FollowPredicate, Photo, Profile, ProfileFormValues } from '../models/profile';
 import { User, UserFormValues } from '../models/user';
 import { store } from '../stores/store';
 
@@ -94,6 +94,8 @@ const Profiles = {
   },
   setMainPhoto: (id: string) => requests.put(`/photos/${id}/setMain`, {}),
   deletePhoto: (id: string) => requests.delete(`/photos/${id}`),
+  updateFollowing: (username: string) => requests.post(`/follow/${username}`, {}),
+  getFollowings: (username: string, predicate: FollowPredicate) => requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`)
 }
 
 const agent = {
