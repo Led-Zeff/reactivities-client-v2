@@ -1,11 +1,12 @@
 import { makeAutoObservable, runInAction } from 'mobx';
 import agent from '../api/agent';
-import { FollowPredicate, Photo, Profile, ProfileFormValues } from '../models/profile';
+import { FollowPredicate, Photo, Profile, ProfileActivity, ProfileActivityPredicate, ProfileFormValues } from '../models/profile';
 import { store } from './store';
 
 export default class ProfileStore {
   profile: Profile | null = null;
   followings: Profile[] = [];
+  activities: ProfileActivity[] = [];
 
   constructor() {
     makeAutoObservable(this);
@@ -125,4 +126,16 @@ export default class ProfileStore {
       console.log(error);
     }
   };
+
+  loadProfileActivities = async (predicate: ProfileActivityPredicate) => {
+    try {
+      const activities = await agent.Profiles.getActivities(this.profile!.username, predicate);
+      runInAction(() => this.activities = activities.map(activity => {
+        activity.date = new Date(activity.date);
+        return activity;
+      }));
+    } catch (error) {
+      console.log(error);
+    }
+  }
 }

@@ -35,4 +35,12 @@ export class ProfileFormValues {
   }
 }
 
+export interface ProfileActivity {
+  activityId: string;
+  title: string;
+  date: Date;
+  category: string;
+}
+
 export type FollowPredicate = 'FOLLOWERS' | 'FOLLOWINGS';
+export type ProfileActivityPredicate = 'FUTURE' | 'PAST' | 'HOST';

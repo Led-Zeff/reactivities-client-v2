@@ -1,7 +1,7 @@
 import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Activity, ActivityFormValues } from '../models/activity';
 import { PaginatedResult } from '../models/pagination';
-import { FollowPredicate, Photo, Profile, ProfileFormValues } from '../models/profile';
+import { FollowPredicate, Photo, Profile, ProfileActivity, ProfileActivityPredicate, ProfileFormValues } from '../models/profile';
 import { User, UserFormValues } from '../models/user';
 import { store } from '../stores/store';
 import { handleError } from './errorHandler';
@@ -38,7 +38,7 @@ const requests = {
   put: <T> (url: string, body: any) => axios.put<T>(url, body).then(responseBody),
   post: <T> (url: string, body: any) => axios.post<T>(url, body).then(responseBody),
   delete: <T> (url: string) => axios.delete<T>(url).then(responseBody),
-}
+};
 
 const Activities = {
   list: (params: URLSearchParams) => requests.get<PaginatedResult<Activity[]>>('/activities', {params}),
@@ -47,7 +47,7 @@ const Activities = {
   update: (acitivity: ActivityFormValues) => requests.put<void>(`/activities/${acitivity.id}`, acitivity),
   delete: (id: string) => requests.delete<void>(`/activities/${id}`),
   attend: (id: string) => requests.post<void>(`/activities/${id}/attend`, {}),
-}
+};
 
 const Accounts = {
   current: () => requests.get<User>('/account'),
@@ -68,13 +68,14 @@ const Profiles = {
   setMainPhoto: (id: string) => requests.put(`/photos/${id}/setMain`, {}),
   deletePhoto: (id: string) => requests.delete(`/photos/${id}`),
   updateFollowing: (username: string) => requests.post(`/follow/${username}`, {}),
-  getFollowings: (username: string, predicate: FollowPredicate) => requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`)
-}
+  getFollowings: (username: string, predicate: FollowPredicate) => requests.get<Profile[]>(`/follow/${username}?predicate=${predicate}`),
+  getActivities: (username: string, predicate: ProfileActivityPredicate) => requests.get<ProfileActivity[]>(`/profiles/${username}/activities?filter=${predicate}`)
+};
 
 const agent = {
   Activities,
   Accounts,
   Profiles
-}
+};
 
 export default agent;
