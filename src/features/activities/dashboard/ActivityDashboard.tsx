@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroller';
 import { Grid, Loader } from 'semantic-ui-react';
 import Loading from '../../../app/layout/Loading';
@@ -7,6 +7,7 @@ import { PagingParams } from '../../../app/models/pagination';
 import { useStore } from '../../../app/stores/store';
 import ActivityFilters from './ActivityFilters';
 import ActivityList from './ActivityList';
+import ActivityListItemPlaceholder from './ActivityListItemPlaceholder';
 
 export default observer(function ActivityDashboard() {
   const {activityStore: {loadActivites, loadingIinitial, setPagingParams, pagination}} = useStore();
@@ -22,15 +23,22 @@ export default observer(function ActivityDashboard() {
     loadActivites();
   }, [loadActivites]);
 
-  if (loadingIinitial && !loadingNext) return <Loading content="Loading activities..." />;
+  
 
   return (
     <Grid>
       <Grid.Column width="10">
-        <InfiniteScroll pageStart={0} loadMore={handleGetNext} initialLoad={false}
-              hasMore={!loadingNext && !!pagination && pagination.currentPage < pagination.totalPages}>
-          <ActivityList />
-        </InfiniteScroll>
+        {loadingIinitial && !loadingNext ? (
+          <Fragment>
+            <ActivityListItemPlaceholder />
+            <ActivityListItemPlaceholder />
+          </Fragment>
+        ) : (
+          <InfiniteScroll pageStart={0} loadMore={handleGetNext} initialLoad={false}
+                hasMore={!loadingNext && !!pagination && pagination.currentPage < pagination.totalPages}>
+            <ActivityList />
+          </InfiniteScroll>
+        )}
       </Grid.Column>
 
       <Grid.Column width="6">

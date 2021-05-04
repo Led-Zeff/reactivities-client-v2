@@ -1,4 +1,4 @@
-import { makeAutoObservable, runInAction } from 'mobx';
+import { makeAutoObservable, reaction, runInAction } from 'mobx';
 import agent from '../api/agent';
 import { Activity, ActivityFormValues } from '../models/activity';
 import { v4 as uuid } from 'uuid';
@@ -14,17 +14,51 @@ export default class ActivityStore {
   loadingIinitial = true;
   pagination: Pagination | null = null;
   pagingParams = new PagingParams();
+  predicate = new Map().set('all', true);
 
   constructor() {
     makeAutoObservable(this);
+
+    reaction(() => this.predicate.keys(), () => {
+      this.pagingParams = new PagingParams();
+      this.activityRegistry.clear();
+      this.loadActivites();
+    });
   }
 
   setPagingParams = (pagingParams: PagingParams) => this.pagingParams = pagingParams;
+
+  setPredicate = (predicate: string, value: boolean | string | Date) => {
+    const resetPredicate = () => {
+      this.predicate.forEach((value, key) => {
+        if (key !== 'startDate') this.predicate.delete(key);
+      });
+    };
+
+    switch(predicate) {
+      case 'all':
+      case 'isGoing':
+      case 'isHost':
+        resetPredicate();
+        this.predicate.set(predicate, value);
+        break;
+      case 'startDate':
+        this.predicate.delete(predicate);
+        this.predicate.set('startDate', value);
+    }
+  };
 
   get axiosParams() {
     const params = new URLSearchParams();
     params.append('pageNumber', this.pagingParams.pageNumber.toString());
     params.append('pageSize', this.pagingParams.pageSize.toString());
+    this.predicate.forEach((value, key) => {
+      if (value instanceof Date) {
+        params.append(key, value.toISOString());
+      } else {
+        params.append(key, value);
+      }
+    });
     return params;
   }
 
@@ -45,6 +79,7 @@ export default class ActivityStore {
   }
 
   loadActivites = async () => {
+    this.setLoadingInitial(true);
     try {
       const activities = await agent.Activities.list(this.axiosParams);
       activities.data.forEach(this.addToRegistry);
