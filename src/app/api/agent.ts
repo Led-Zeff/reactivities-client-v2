@@ -1,10 +1,10 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
-import { toast } from 'react-toastify';
-import { history } from '../..';
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
 import { Activity, ActivityFormValues } from '../models/activity';
+import { PaginatedResult } from '../models/pagination';
 import { FollowPredicate, Photo, Profile, ProfileFormValues } from '../models/profile';
 import { User, UserFormValues } from '../models/user';
 import { store } from '../stores/store';
+import { handleError } from './errorHandler';
 
 const sleep = (delay: number) => new Promise<void>((resolve) => setTimeout(() => resolve(), delay))
 
@@ -18,57 +18,30 @@ axios.interceptors.request.use(config => {
 
 axios.interceptors.response.use(async r => {
   await sleep(500);
-  return r;
-}, (error: AxiosError) => {
-  const {data, status, config} = error.response!;
-  switch(status) {
-    case 400:
-      if (!data.errors) {
-        toast.error(data.title);
-      }
-      console.log(data)
-      if (config.method === 'get' && data.errors.hasOwnProperty('id')) {
-        history.push('/not-found');
-      }
-      if (data.errors) {
-        const modalStateErrors = [];
-        for (const key in data.errors) {
-          if (Object.prototype.hasOwnProperty.call(data.errors, key)) {
-            modalStateErrors.push(data.errors[key]);
-          }
-        }
 
-        throw modalStateErrors.flat();
-      } else {
-        toast.error(data);
-      }
-      break;
-    case 401:
-      toast.error('Unauthorized');
-      break;
-    case 404:
-      history.push('/not-found');
-      break;
-    case 500:
-      store.commonStore.setServerError(data);
-      history.push('/server-error');
-      break;
+  const pagination = r.headers['pagination'];
+  if (pagination) {
+    r.data = new PaginatedResult(r.data, JSON.parse(pagination));
+    // return r as AxiosResponse<PaginatedResult<>>
   }
 
+  return r;
+}, (error: AxiosError) => {
+  handleError(error);
   return Promise.reject(error);
 });
 
 const responseBody = <T> (response: AxiosResponse<T>) => response.data;
 
 const requests = {
-  get: <T> (url: string) => axios.get<T>(url).then(responseBody),
+  get: <T> (url: string, config?: AxiosRequestConfig) => axios.get<T>(url, config).then(responseBody),
   put: <T> (url: string, body: any) => axios.put<T>(url, body).then(responseBody),
   post: <T> (url: string, body: any) => axios.post<T>(url, body).then(responseBody),
   delete: <T> (url: string) => axios.delete<T>(url).then(responseBody),
 }
 
 const Activities = {
-  list: () => requests.get<Activity[]>('/activities'),
+  list: (params: URLSearchParams) => requests.get<PaginatedResult<Activity[]>>('/activities', {params}),
   detail: (id: string) => requests.get<Activity>(`/activities/${id}`),
   create: (acitivity: ActivityFormValues) => requests.post<void>('/activities', acitivity),
   update: (acitivity: ActivityFormValues) => requests.put<void>(`/activities/${acitivity.id}`, acitivity),
