@@ -1,5 +1,5 @@
 import { observer } from 'mobx-react-lite';
-import { Grid, Header, MenuItem, Tab } from 'semantic-ui-react';
+import { Grid, Header, Tab } from 'semantic-ui-react';
 import ProfileActivitiesPane from './ProfileActivitiesPane';
 
 export default observer(function ProfielActivities() {

@@ -8,7 +8,7 @@ import { handleError } from './errorHandler';
 
 const sleep = (delay: number) => new Promise<void>((resolve) => setTimeout(() => resolve(), delay))
 
-axios.defaults.baseURL = 'http://localhost:5000/api';
+axios.defaults.baseURL = process.env.REACT_APP_API_URL;
 
 axios.interceptors.request.use(config => {
   const token = store.commonStore.token;
@@ -17,7 +17,7 @@ axios.interceptors.request.use(config => {
 });
 
 axios.interceptors.response.use(async r => {
-  await sleep(500);
+  if (process.env.NODE_ENV === 'development') await sleep(500);
 
   const pagination = r.headers['pagination'];
   if (pagination) {
