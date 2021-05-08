@@ -8,6 +8,7 @@ export default class UserStore {
   user: User | null = null;
   fbAccessToken: string | null = null;
   fbLoading = false;
+  refreshTokenTomeout: any;
 
   constructor() {
     makeAutoObservable(this);
@@ -21,6 +22,7 @@ export default class UserStore {
     try {
       const user = await agent.Accounts.login(creds);
       store.commonStore.setToken(user.token);
+      this.startRefreshTokenTimer(user);
       this.setUser(user);
       history.push('/activities');
       store.modalStore.closeModal();
@@ -31,6 +33,7 @@ export default class UserStore {
 
   logout = () => {
     store.commonStore.setToken(null);
+    this.stopRefreshTokenTimer();
     this.user = null;
     history.push('/');
   }
@@ -38,6 +41,8 @@ export default class UserStore {
   getUser = async () => {
     try {
       const user = await agent.Accounts.current();
+      store.commonStore.setToken(user.token);
+      this.startRefreshTokenTimer(user);
       this.setUser(user);
     } catch (error) {
       console.log(error);
@@ -48,6 +53,7 @@ export default class UserStore {
     try {
       const user = await agent.Accounts.register(creds);
       store.commonStore.setToken(user.token);
+      this.startRefreshTokenTimer(user);
       this.setUser(user);
       history.push('/activities');
       store.modalStore.closeModal();
@@ -79,6 +85,7 @@ export default class UserStore {
       agent.Accounts.fbLogin(accessToken).then(user => {
         runInAction(() => {
           store.commonStore.setToken(user.token);
+          this.startRefreshTokenTimer(user);
           this.setUser(user);
         })
         history.push('/activities');
@@ -97,4 +104,27 @@ export default class UserStore {
       }, { scope: 'public_profile,email' });
     }
   };
+
+  refreshToken = async () => {
+    this.stopRefreshTokenTimer();
+    try {
+      const user = await agent.Accounts.refreshToken();
+      runInAction(() => this.user = user);
+      store.commonStore.setToken(user.token);
+      this.startRefreshTokenTimer(user);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  private startRefreshTokenTimer(user: User) {
+    const jwtToken = JSON.parse(atob(user.token.split('.')[1]));
+    const expires = new Date(jwtToken.exp * 1000);
+    const timeout = expires.getTime() - Date.now() - (60 * 1000);
+    this.refreshTokenTomeout = setTimeout(this.refreshToken, timeout);
+  }
+
+  private stopRefreshTokenTimer() {
+    clearTimeout(this.refreshTokenTomeout);
+  }
 }
