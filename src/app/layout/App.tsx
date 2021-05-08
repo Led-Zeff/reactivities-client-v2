@@ -26,6 +26,7 @@ function App() {
     if (commonStore.token) {
       userStore.getUser().finally(() => commonStore.setAppLoaded());
     } else {
+      userStore.setFbAccessToken().then(() => commonStore.setAppLoaded());
       commonStore.setAppLoaded();
     }
   }, [commonStore, userStore]);
